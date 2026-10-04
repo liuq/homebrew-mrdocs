@@ -32,6 +32,7 @@ class Mrdocs < Formula
 
   # Missing explicit instantiation; the link fails when the compiler inlines
   # the implicit one (e.g. with Homebrew's LLVM 23.1).
+  # https://github.com/cppalliance/mrdocs/pull/1334
   patch :DATA
 
   def install
