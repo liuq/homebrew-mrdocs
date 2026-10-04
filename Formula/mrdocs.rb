@@ -31,6 +31,8 @@ class Mrdocs < Formula
   # https://github.com/cppalliance/mrdocs/pull/1334
   patch :DATA
 
+  deny_network_access!
+
   def install
     llvm = Formula["llvm"]
     deps = buildpath/"deps"
