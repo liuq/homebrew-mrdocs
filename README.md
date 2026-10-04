@@ -1,2 +1,3 @@
 # homebrew-mrdocs
-A homebrew formula for mrdocs installation from compiled binaries
+
+A Homebrew formula for [MrDocs](https://github.com/cppalliance/mrdocs).
