@@ -22,8 +22,6 @@ class MrdocsBin < Formula
     end
   end
 
-  conflicts_with "mrdocs", because: "both install the same files"
-
   # Upstream only ships prebuilt binaries for Apple Silicon and Linux x86_64.
   depends_on arch: :arm64 if OS.mac?
 

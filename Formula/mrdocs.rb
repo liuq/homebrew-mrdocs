@@ -15,16 +15,12 @@ class Mrdocs < Formula
   depends_on "ninja" => :build
   depends_on "python@3.14" => :build
   depends_on "llvm"
+  depends_on "lua"
 
-  conflicts_with "mrdocs-bin", because: "both install the same files"
-
-  # Versions and build options follow utils/bootstrap/recipes/*.json;
-  # the CMake packaging comes from utils/bootstrap/patches/*.
-  resource "lua" do
-    url "https://github.com/lua/lua/archive/refs/tags/v5.4.8.tar.gz"
-    sha256 "d85b70a65f43c5d2254944d58d625e822c8e2e10d9c6a3bd9b5b657e46376a19"
-  end
-
+  # mrdocs needs a JerryScript built with an external context and its own
+  # context header, so it can't use the jerryscript formula. Version and
+  # options follow utils/bootstrap/recipes/jerryscript.json; the CMake
+  # packaging comes from utils/bootstrap/patches/jerryscript.
   resource "jerryscript" do
     url "https://github.com/jerryscript-project/jerryscript/archive/refs/tags/v3.0.0.tar.gz"
     sha256 "4d586d922ba575d95482693a45169ebe6cb539c4b5a0d256a6651a39e47bf0fc"
@@ -40,12 +36,6 @@ class Mrdocs < Formula
     deps = buildpath/"deps"
     patches = buildpath/"utils/bootstrap/patches"
 
-    resource("lua").stage do
-      cp_r Dir[patches/"lua/*"], "."
-      system "cmake", "-S", ".", "-B", "build", "-G", "Ninja", *std_cmake_args(install_prefix: deps/"lua")
-      system "cmake", "--build", "build", "--target", "install"
-    end
-
     resource("jerryscript").stage do
       cp_r Dir[patches/"jerryscript/*"], "."
       system "cmake", "-S", ".", "-B", "build", "-G", "Ninja",
@@ -59,12 +49,23 @@ class Mrdocs < Formula
       system "cmake", "--build", "build", "--target", "install"
     end
 
+    # mrdocs finds Lua through a CMake package exporting Lua::lua,
+    # which the lua formula does not ship.
+    lua = Formula["lua"]
+    lua_mm = lua.version.major_minor
+    (deps/"lua/LuaConfig.cmake").write <<~CMAKE
+      add_library(Lua::lua SHARED IMPORTED)
+      set_target_properties(Lua::lua PROPERTIES
+        IMPORTED_LOCATION "#{lua.opt_lib/shared_library("liblua#{lua_mm}")}"
+        INTERFACE_INCLUDE_DIRECTORIES "#{lua.opt_include}/lua#{lua_mm}")
+    CMAKE
+
     args = %W[
       -DCMAKE_C_COMPILER=#{llvm.opt_bin}/clang
       -DCMAKE_CXX_COMPILER=#{llvm.opt_bin}/clang++
       -DLLVM_ROOT=#{llvm.opt_prefix}
       -Djerryscript_ROOT=#{deps}/jerryscript
-      -DLua_ROOT=#{deps}/lua
+      -DLua_DIR=#{deps}/lua
       -DPYTHON_EXECUTABLE=#{which("python3.14")}
       -DMRDOCS_BUILD_TESTS=OFF
       -DMRDOCS_BUILD_DOCS=OFF
@@ -89,13 +90,23 @@ class Mrdocs < Formula
       generator: adoc
       multipage: false
       output: out
+      addons-supplemental: [addons]
     YAML
+    (testpath/"addons/extensions/rename.lua").write <<~LUA
+      mrdocs.register_transform("rename", function(ctx)
+        for _, sym in ipairs(ctx.corpus.symbols) do
+          if sym.kind == "function" then
+            sym.name = "renamed_" .. sym.name
+          end
+        end
+      end)
+    LUA
     (testpath/"compile_commands.json").write <<~JSON
       [{"directory": "#{testpath}", "file": "#{testpath}/hello.hpp",
         "arguments": ["clang++", "-std=c++20", "-x", "c++-header", "#{testpath}/hello.hpp"]}]
     JSON
     system bin/"mrdocs", "mrdocs.yml", "compile_commands.json"
-    assert_match "hello", (testpath/"out/reference.adoc").read
+    assert_match "renamed&lowbar;hello", (testpath/"out/reference.adoc").read
   end
 end
 
