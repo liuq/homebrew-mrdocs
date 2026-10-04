@@ -1,0 +1,41 @@
+name: Tests
+
+on:
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+        formula: [mrdocs, mrdocs-bin]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - id: setup
+        uses: Homebrew/actions/setup-homebrew@main
+
+      - name: Use this checkout as the liuq/mrdocs tap
+        run: |
+          tap="$(brew --repository)/Library/Taps/liuq/homebrew-mrdocs"
+          rm -rf "$tap"
+          mkdir -p "$(dirname "$tap")"
+          ln -s "$GITHUB_WORKSPACE" "$tap"
+          brew trust liuq/mrdocs
+
+      - run: brew install --build-from-source --verbose liuq/mrdocs/${{ matrix.formula }}
+      - run: brew test --verbose liuq/mrdocs/${{ matrix.formula }}
+      - run: brew audit --strict liuq/mrdocs/${{ matrix.formula }}
