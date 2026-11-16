@@ -10,15 +10,15 @@ class MrdocsBin < Formula
 
   on_macos do
     on_arm do
-      url "https://github.com/cppalliance/mrdocs/releases/download/2026.9.29/MrDocs-2026.9.29-Darwin.tar.xz"
-      sha256 "b393adf3df2180fc00edd50d6a976a79de3a1b9fbab0e93844495e4faa1c8435"
+      url "https://github.com/cppalliance/mrdocs/releases/download/2026.11.10/MrDocs-2026.11.10-Darwin.tar.xz"
+      sha256 "43531f3071be4291c54e8fe0658fd9daafd2079c75584c4af76854d1df28a4b5"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/cppalliance/mrdocs/releases/download/2026.9.29/MrDocs-2026.9.29-Linux.tar.xz"
-      sha256 "9d96e42f303046fb0b221aa9071eabccc40b9683e0b7af2b02a929d15476ca6a"
+      url "https://github.com/cppalliance/mrdocs/releases/download/2026.11.10/MrDocs-2026.11.10-Linux.tar.xz"
+      sha256 "c7e24b9986ec27740582a01b8ca6f86efcda105d0eaedb5faf10d9acf563ef14"
     end
   end
 
