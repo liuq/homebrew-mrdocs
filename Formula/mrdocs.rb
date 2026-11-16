@@ -2,8 +2,8 @@ class Mrdocs < Formula
   desc "C++ reference documentation generator"
   homepage "https://www.mrdocs.com"
   url "https://github.com/cppalliance/mrdocs.git",
-      tag:      "2026.9.29",
-      revision: "6a984f66cf770ee5808bc0f53614c522c68fa507"
+      tag:      "2026.11.10",
+      revision: "2d2992857a530ae843c4193748e7c9d302cd4b6d"
   license "Apache-2.0" => { with: "LLVM-exception" }
 
   livecheck do
